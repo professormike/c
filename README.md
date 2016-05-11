@@ -1,3 +1,3 @@
-# C (Winter 1161)
+# C (Summer 2016)
 
-Whoops, I accidentally created a branch with the wrong name
+This directory will keep class exercises we do throughout the summer
