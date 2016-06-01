@@ -18,7 +18,7 @@ main(void)
 		scanf("%d", &array[i]);
 	}
 	qsort(array, sizeof array / sizeof *array, sizeof *array,
-		compare_ints);
+		&compare_ints);
 	printf("The median is %d\n", array[sizeof array / sizeof *array / 2]);
 	return 0;
 }
