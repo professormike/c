@@ -44,6 +44,20 @@ print_list(struct linked_list const *l)
 	printf("\n");
 }
 
+void
+free_list(struct linked_list *l)
+/*
+ * deallocate all nodes in the linked list pointed to by 'l'
+ */
+{
+	struct node *current_node = l->head;
+	while (current_node != NULL) {
+		struct node *temp = current_node->next;
+		free(current_node);
+		current_node = temp;
+	}
+}
+
 int
 main(void)
 {
@@ -53,6 +67,7 @@ main(void)
 	add_to_end(&l, 1);
 	add_to_end(&l, 6);
 	print_list(&l);
+	free_list(&l);
 	return 0;
 }
 
