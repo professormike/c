@@ -34,6 +34,52 @@ add_to_end(struct linked_list *l, int x)
 }
 
 void
+add_to_beginning(struct linked_list *l, int x)
+{
+	// create the new node
+	struct node *new_node = malloc(sizeof *new_node);
+	new_node->data = x;
+
+	// add the new node to the head of the list
+	new_node->next = l->head;
+	l->head = new_node;	
+}
+
+void
+add_at_position(struct linked_list *l, int x, size_t position)
+/*
+ * 'l' is a pointer to a linked list
+ * 'x' is a new element to insert into the linked list
+ * 'position' is a number (starting counting from 0) indicating where in
+ *		the linked list to insert the element. The head of the list is
+ *		position 0, the next element is 1, and so on...
+ * if 'position' is out of bounds, do not do any insertion
+ */
+{
+	if (position == 0) {	// make a special case for this so that we
+							// don't have to use pointers to pointers
+		add_to_beginning(l, x);
+	} else {
+		// create the new node
+		struct node *new_node = malloc(sizeof *new_node);
+		new_node->data = x;
+
+		// find the node that comes immediately before the insertion, then
+		// insert the new node in
+		struct node *current_node = l->head;
+		for (size_t i = 0; i < position - 1; i++) {
+			current_node = current_node->next;
+			if (current_node == NULL) {	// unexpectedly hit the end of the list
+				free(new_node);
+				return;
+			}
+		}
+		new_node->next = current_node->next;
+		current_node->next = new_node;
+	}
+}
+
+void
 print_list(struct linked_list const *l)
 {
 	struct node const *current_node = l->head;
@@ -62,10 +108,14 @@ int
 main(void)
 {
 	struct linked_list l = { .head = NULL };	// initially an empty list
+	add_to_beginning(&l, 0);
 	add_to_end(&l, 2);
 	add_to_end(&l, 9);
 	add_to_end(&l, 1);
 	add_to_end(&l, 6);
+	add_to_beginning(&l, 10);
+	add_at_position(&l, 20, 3);
+	add_at_position(&l, 30, 1000000);	// this should not insert anything
 	print_list(&l);
 	free_list(&l);
 	return 0;
