@@ -69,7 +69,7 @@ add_at_position(struct linked_list *l, int x, size_t position)
 		struct node *current_node = l->head;
 		for (size_t i = 0; i < position - 1; i++) {
 			current_node = current_node->next;
-			if (current_node == NULL) {	// unexpectedly hit the end of the list
+			if (current_node == NULL) {	// unexpectedly hit end of the list
 				free(new_node);
 				return;
 			}
@@ -104,6 +104,37 @@ free_list(struct linked_list *l)
 	}
 }
 
+void
+remove_from_end(struct linked_list *l)
+{
+	struct node *current_node = l->head;
+	if (current_node == NULL) {	// empty list
+		// do nothing
+	} else if (current_node->next == NULL) {	// only 1 element
+		free(l->head);
+		l->head = NULL;
+	} else {
+		// loop will stop at the 2nd last node
+		while (current_node->next->next != NULL) {
+			current_node = current_node->next;
+		}
+		free(current_node->next);	// deallocate the last node
+		current_node->next = NULL;
+	}
+}
+
+void
+remove_from_beginning(struct linked_list *l)
+{
+	if (l->head == NULL) {
+		// do nothing
+	} else {
+		struct node *second_node = l->head->next;
+		free(l->head);	// deallocates the first node
+		l->head = second_node;	// update pointer to point at 2nd node
+	}
+}
+
 int
 main(void)
 {
@@ -116,6 +147,8 @@ main(void)
 	add_to_beginning(&l, 10);
 	add_at_position(&l, 20, 3);
 	add_at_position(&l, 30, 1000000);	// this should not insert anything
+	remove_from_end(&l);
+	remove_from_beginning(&l);
 	print_list(&l);
 	free_list(&l);
 	return 0;
