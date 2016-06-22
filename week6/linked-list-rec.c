@@ -92,9 +92,14 @@ free_list(struct linked_list *l)
 struct node *
 remove_from_end_node(struct node *n)
 {
-	if (n == NULL) {
-	} else if (n->next == NULL) {
+	if (n == NULL) {	// there were no nodes to begin with
+		return NULL;
+	} else if (n->next == NULL) {	// we've found the last node
+		free(n);
+		return NULL;
 	} else {
+		n->next = remove_from_end_node(n->next);
+		return n;
 	}
 }
 
@@ -111,6 +116,7 @@ main(void)
 	add_to_end(&l, 1);
 	add_to_end(&l, 2);
 	add_to_end(&l, 3);
+	remove_from_end(&l);
 	print_list(&l);
 	free_list(&l);
 	return 0;
