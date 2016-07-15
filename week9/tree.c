@@ -11,49 +11,57 @@ struct tree {
 };
 
 static
-bool
-search_in_node(struct node const *n, long long x)
+struct node **
+search_in_node(struct node **n, long long x)
 {
-	if (n == NULL) {
-		return false;
-	} else if (n->data > x) {
-		return search_in_node(n->left, x);
-	} else if (n->data < x) {
-		return search_in_node(n->right, x);
+	if (*n == NULL) {
+		return n;
+	} else if ((*n)->data > x) {
+		return search_in_node(&(*n)->left, x);
+	} else if ((*n)->data < x) {
+		return search_in_node(&(*n)->right, x);
 	} else {	// n->data == x
-		return true;
+		return n;
 	}
 }
 
 bool
-search_in_tree(struct tree const *t, long long x)
+search_in_tree(struct tree *t, long long x)
 {
-	return search_in_node(t->root, x);
-}
-
-static
-struct node *
-insert_in_node(struct node *n, long long x)
-{
-	if (n == NULL) {
-		n = malloc(sizeof *n);
-		n->data = x;
-		n->left = NULL;
-		n->right = NULL;
-	} else if (n->data > x) {
-		n->left = insert_in_node(n->left, x);
-	} else if (n->data < x) {
-		n->right = insert_in_node(n->right, x);
-	} else {		// n->data == x
-		// do nothing
-	}
-	return n;
+	return *search_in_node(&t->root, x) != NULL;
 }
 
 void
 insert_in_tree(struct tree *t, long long x)
 {
-	t->root = insert_in_node(t->root, x);
+	struct node **n = search_in_node(&t->root, x);
+	if (*n == NULL) {	// need to insert the node
+		*n = malloc(sizeof **n);
+		(*n)->data = x;
+		(*n)->left = NULL;
+		(*n)->right = NULL;
+	} else {	// data already exists
+		// do nothing
+	}
+}
+
+static
+void
+destroy_from_node(struct node *n)
+{
+	if (n == NULL) {
+		// do nothing
+	} else {
+		destroy_from_node(n->left);
+		destroy_from_node(n->right);
+		free(n);
+	}
+}
+
+void
+destroy_tree(struct tree *t)
+{
+	destroy_from_node(t->root);
 }
 
 int
@@ -71,6 +79,7 @@ main(void)
 	insert_in_tree(&t, 14);
 	printf("14 exists? %d\n", search_in_tree(&t, 14));
 	printf("15 exists? %d\n", search_in_tree(&t, 15));
+	destroy_tree(&t);
 	return 0;
 }
 
