@@ -5,44 +5,75 @@
 struct node {
 	long long data;
 	struct node *left, *right;
+	int height;
 };
 struct tree {
 	struct node *root;
 };
 
 static
-struct node **
-search_in_node(struct node **n, long long x)
+int
+balance_factor(struct node const *n)
+{
+	/*
+	if (n->left == NULL && n->right == NULL) {
+		return 0;
+	} else if (n->right == NULL) {
+		return -n->left->height;
+	} else if (n->left == NULL) {
+		return n->right->height;
+	} else {
+		return n->right->height - n->left->height;
+	}
+	*/
+	int r = n->right == NULL ? 0 : n->right->height;
+	int l = n->left == NULL ? 0 : n->left->height;
+	return r - l;
+}
+
+static
+bool
+search_in_node(struct node const *n, long long x)
 {
 	if (*n == NULL) {
-		return n;
-	} else if ((*n)->data > x) {
-		return search_in_node(&(*n)->left, x);
-	} else if ((*n)->data < x) {
-		return search_in_node(&(*n)->right, x);
+		return false;
+	} else if (n->data > x) {
+		return search_in_node(n->left, x);
+	} else if (n->data < x) {
+		return search_in_node(n->right, x);
 	} else {	// n->data == x
-		return n;
+		return true;
 	}
 }
 
 bool
 search_in_tree(struct tree *t, long long x)
 {
-	return *search_in_node(&t->root, x) != NULL;
+	return search_in_node(t->root, x);
+}
+
+static
+struct node *
+insert_in_node(struct node *n, long long x)
+{
+	if (n == NULL) {	// need to insert the node here
+		n = malloc(sizeof *n);
+		n->data = x;
+		n->left = NULL;
+		n->right = NULL;
+		n->height = 1;
+	} else if (n->data > x) {
+		n->left = insert_in_node(n->left, x);
+	} else if (n->data < x) {
+		n->right = insert_in_node(n->right, x);
+	}
+	return n;
 }
 
 void
 insert_in_tree(struct tree *t, long long x)
 {
-	struct node **n = search_in_node(&t->root, x);
-	if (*n == NULL) {	// need to insert the node
-		*n = malloc(sizeof **n);
-		(*n)->data = x;
-		(*n)->left = NULL;
-		(*n)->right = NULL;
-	} else {	// data already exists
-		// do nothing
-	}
+	t->root = insert_in_node(t->root, x);
 }
 
 static
@@ -75,28 +106,40 @@ immediate_successor(struct node *n)
 	return n;
 }
 
+static
+struct node *
+remove_from_node(struct node *n, long long x)
+{
+	if (n == NULL) {	// wasn't found
+		// do nothing
+	} else if (n->data > x) {
+		n->left = remove_from_node(n->left, x);
+	} else if (n->data < x) {
+		n->right = remove_from_node(n->right, x);
+	} else {
+		if (node_tbd->left == NULL && node_tbd->right == NULL) {
+			free(node_tbd);
+			*n = NULL;	// update pointer in parent node
+		} else if (node_tbd->left == NULL) {	// only right child
+			*n = node_tbd->right;
+			free(node_tbd);
+		} else if (node_tbd->right == NULL) {	// only left child
+			*n = node_tbd->left;
+			free(node_tbd);
+		} else {	// we have 2 children :(
+			struct node *replacement = immediate_successor(node_tbd);
+			long long new_value = replacement->data;
+			remove_from_tree(t, new_value);
+			node_tbd->data = new_value;
+		}
+	}
+	return n;
+}
+
 void
 remove_from_tree(struct tree *t, long long x)
 {
-	struct node **n = search_in_node(&t->root, x);
-	struct node * const node_tbd = *n;
-	if (node_tbd == NULL) {	// number we searched for doesn't exist
-		return;
-	} else if (node_tbd->left == NULL && node_tbd->right == NULL) {
-		free(node_tbd);
-		*n = NULL;	// update pointer in parent node
-	} else if (node_tbd->left == NULL) {	// only right child
-		*n = node_tbd->right;
-		free(node_tbd);
-	} else if (node_tbd->right == NULL) {	// only left child
-		*n = node_tbd->left;
-		free(node_tbd);
-	} else {	// we have 2 children :(
-		struct node *replacement = immediate_successor(node_tbd);
-		long long new_value = replacement->data;
-		remove_from_tree(t, new_value);
-		node_tbd->data = new_value;
-	}
+	t->root = remove_from_node(t->root, x);
 }
 
 int
@@ -112,10 +155,10 @@ main(void)
 	insert_in_tree(&t, 18);
 	insert_in_tree(&t, 10);
 	insert_in_tree(&t, 14);
-	remove_from_tree(&t, 16);
+	remove_from_tree(&t, 8);
 	printf("14 exists? %d\n", search_in_tree(&t, 14));
 	printf("15 exists? %d\n", search_in_tree(&t, 15));
-	printf("16 exists? %d\n", search_in_tree(&t, 16));
+	printf("8 exists? %d\n", search_in_tree(&t, 8));
 	destroy_tree(&t);
 	return 0;
 }
