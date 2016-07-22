@@ -32,6 +32,19 @@ balance_factor(struct node const *n)
 }
 
 static
+void
+recalculate_height(struct node *n)
+{
+	int lh = n->left == NULL ? 0 : n->left->height;
+	int rh = n->right == NULL ? 0 : n->right->height;
+	if (lh > rh) {
+		n->height = lh + 1;
+	} else {
+		n->height = rh + 1;
+	}
+}
+
+static
 bool
 search_in_node(struct node const *n, long long x)
 {
@@ -67,6 +80,7 @@ insert_in_node(struct node *n, long long x)
 	} else if (n->data < x) {
 		n->right = insert_in_node(n->right, x);
 	}
+	recalculate_height(n);
 	return n;
 }
 
@@ -133,6 +147,7 @@ remove_from_node(struct node *n, long long x)
 			node_tbd->data = new_value;
 		}
 	}
+	recalculate_height(n);
 	return n;
 }
 
