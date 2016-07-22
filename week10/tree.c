@@ -45,10 +45,101 @@ recalculate_height(struct node *n)
 }
 
 static
+struct node *
+rebalance(struct node *n)
+{
+	if (balance_factor(n) == -2 && balance_factor(n->left) == +1) {	// LR
+		struct node *x = n,
+			*y = x->left,
+			*d = x->right,
+			*a = y->left,
+			*z = y->right,
+			*b = z->left,
+			*c = z->right;
+		x->left = z;
+		x->right = d;
+		z->left = y;
+		z->right = c;
+		y->left = a;
+		y->right = b;
+		n = x;	// root of this subtree is still x
+		recalculate_height(z);
+		recalculate_height(y);
+		recalculate_height(x);
+	}
+	if (balance_factor(n) == -2 && balance_factor(n->left) <= 0) {	// LL
+		struct node *x = n,
+			*y = x->left,
+			*d = x->right,
+			*z = y->left,
+			*c = y->right,
+			*a = z->left,
+			*b = z->right;
+		y->left = z;
+		y->right = x;
+		z->left = a;
+		z->right = b;
+		x->left = c;
+		x->right = d;
+		n = y;	// the new root of this subtree is y
+/* this is the smart way to do it
+		struct node *new_root = n->left;
+		n->left = new_root->right;
+		new_root->right = n;
+		n = new_root;
+*/
+		recalculate_height(z);
+		recalculate_height(x);
+		recalculate_height(y);
+	}
+
+	if (balance_factor(n) == +2 && balance_factor(n->right) == -1) {	// RL
+		struct node *x = n,
+			*y = x->right,
+			*d = x->left,
+			*a = y->right,
+			*z = y->left,
+			*b = z->right,
+			*c = z->left;
+		x->right = z;
+		x->left = d;
+		z->right = y;
+		z->left = c;
+		y->right = a;
+		y->left = b;
+		n = x;	// root of this subtree is still x
+		recalculate_height(z);
+		recalculate_height(y);
+		recalculate_height(x);
+	}
+	if (balance_factor(n) == +2 && balance_factor(n->right) >= 0) {	// RR
+		struct node *x = n,
+			*y = x->right,
+			*d = x->left,
+			*z = y->right,
+			*c = y->left,
+			*a = z->right,
+			*b = z->left;
+		y->right = z;
+		y->left = x;
+		z->right = a;
+		z->left = b;
+		x->right = c;
+		x->left = d;
+		n = y;	// the new root of this subtree is y
+		recalculate_height(z);
+		recalculate_height(x);
+		recalculate_height(y);
+	}
+
+	return n;
+}
+
+static
 bool
 search_in_node(struct node const *n, long long x)
 {
-	if (*n == NULL) {
+	if (n == NULL) {
 		return false;
 	} else if (n->data > x) {
 		return search_in_node(n->left, x);
@@ -81,7 +172,8 @@ insert_in_node(struct node *n, long long x)
 		n->right = insert_in_node(n->right, x);
 	}
 	recalculate_height(n);
-	return n;
+	return rebalance(n);
+	//return n;
 }
 
 void
@@ -131,24 +223,26 @@ remove_from_node(struct node *n, long long x)
 	} else if (n->data < x) {
 		n->right = remove_from_node(n->right, x);
 	} else {
-		if (node_tbd->left == NULL && node_tbd->right == NULL) {
-			free(node_tbd);
-			*n = NULL;	// update pointer in parent node
-		} else if (node_tbd->left == NULL) {	// only right child
-			*n = node_tbd->right;
-			free(node_tbd);
-		} else if (node_tbd->right == NULL) {	// only left child
-			*n = node_tbd->left;
-			free(node_tbd);
+		if (n->left == NULL && n->right == NULL) {
+			free(n);
+			return NULL;
+		} else if (n->left == NULL) {	// only right child
+			struct node *t = n->right;
+			free(n);
+			n = t;
+		} else if (n->right == NULL) {	// only left child
+			struct node *t = n->left;
+			free(n);
+			n = t;
 		} else {	// we have 2 children :(
-			struct node *replacement = immediate_successor(node_tbd);
+			struct node *replacement = immediate_successor(n);
 			long long new_value = replacement->data;
-			remove_from_tree(t, new_value);
-			node_tbd->data = new_value;
+			n->right = remove_from_node(n->right, new_value);
+			n->data = new_value;
 		}
 	}
 	recalculate_height(n);
-	return n;
+	return rebalance(n);
 }
 
 void
@@ -161,19 +255,10 @@ int
 main(void)
 {
 	struct tree t = { .root = NULL };
-	insert_in_tree(&t, 8);
-	insert_in_tree(&t, 4);
-	insert_in_tree(&t, 2);
-	insert_in_tree(&t, 6);
-	insert_in_tree(&t, 16);
-	insert_in_tree(&t, 12);
-	insert_in_tree(&t, 18);
-	insert_in_tree(&t, 10);
-	insert_in_tree(&t, 14);
-	remove_from_tree(&t, 8);
-	printf("14 exists? %d\n", search_in_tree(&t, 14));
-	printf("15 exists? %d\n", search_in_tree(&t, 15));
-	printf("8 exists? %d\n", search_in_tree(&t, 8));
+	long long x;
+	while (scanf("%lld", &x) == 1) {
+		insert_in_tree(&t, x);
+	}
 	destroy_tree(&t);
 	return 0;
 }
